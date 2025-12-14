@@ -4,6 +4,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
+const path = require('path');
+
+// Import Routes
+const reportRoutes = require('./routes/reportRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +42,15 @@ io.on('connection', (socket) => {
     console.log('❌ Client disconnected:', socket.id);
   });
 });
+
+// Store Socket.IO instance in app for route access
+app.set('socketio', io);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API Routes
+app.use('/api/reports', reportRoutes);
 
 // Test Route
 app.get('/api/health', (req, res) => {
