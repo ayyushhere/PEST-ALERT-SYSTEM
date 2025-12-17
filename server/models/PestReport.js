@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const pestReportSchema = new mongoose.Schema({
   farmerName: {
@@ -32,4 +32,6 @@ const pestReportSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('PestReport', pestReportSchema);
+// ✅ FIX: Use export default instead of module.exports
+const PestReport = mongoose.model('PestReport', pestReportSchema);
+export default PestReport;

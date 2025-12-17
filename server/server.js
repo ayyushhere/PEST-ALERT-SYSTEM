@@ -1,21 +1,22 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { Server } = require('socket.io');
-const http = require('http');
-const path = require('path');
+import { fileURLToPath } from 'url';
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { Server } from 'socket.io';
+import http from 'http';
+import path from 'path';
 
-// Import Routes
-const reportRoutes = require('./routes/reportRoutes');
+// --- IMPORTS ---
+import reportRoutes from './routes/reportRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import User from './models/User.js';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO with CORS
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:5173',
@@ -23,41 +24,51 @@ const io = new Server(server, {
   }
 });
 
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:5173'
-}));
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
-// MongoDB Connection
+// --- DATABASE ---
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected Successfully'))
-  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch((err) => console.error('❌ MongoDB Error:', err));
 
-// Socket.IO Connection
+// --- SOCKET.IO ---
 io.on('connection', (socket) => {
   console.log('🔌 New client connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('❌ Client disconnected:', socket.id);
-  });
+  socket.on('disconnect', () => console.log('❌ Client disconnected:', socket.id));
 });
-
-// Store Socket.IO instance in app for route access
 app.set('socketio', io);
 
-// Serve uploaded files statically
+// --- MOUNT ROUTES ---
+app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes); // <--- THIS LINE WAS LIKELY MISSING
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// --- STATIC FILES ---
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
-app.use('/api/reports', reportRoutes);
+// --- SEED ADMIN SCRIPT ---
+const seedAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      const admin = new User({
+        name: 'Admin User',
+        email: 'admin@agrishield.com',
+        password: 'admin123',
+        role: 'admin'
+      });
+      await admin.save();
+      console.log('👑 Default Admin Account Created');
+    }
+  } catch (error) {
+    console.error('❌ Admin Seed Error:', error);
+  }
+};
+seedAdmin();
 
-// Test Route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
-});
-
-// Start Server
+// --- START SERVER ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

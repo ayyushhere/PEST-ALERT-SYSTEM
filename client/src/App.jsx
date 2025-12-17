@@ -1,66 +1,30 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { io } from 'socket.io-client'
-import './App.css'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import ReportPest from './pages/ReportPest';
+import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/Login';       
+import Register from './pages/Register';
+import AlertListener from './components/AlertListener';
+import Navbar from './components/Navbar';
+import Home from './pages/Home.jsx';
+import MyReports from './pages/MyReports';
+import ManageUsers from './pages/ManageUsers';
 
 function App() {
-  const [serverStatus, setServerStatus] = useState('Checking...')
-  const [socketConnected, setSocketConnected] = useState(false)
-
-  useEffect(() => {
-    // Test backend API connection
-    const checkServer = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/health')
-        setServerStatus(response.data.status)
-      } catch (error) {
-        setServerStatus('Server is offline')
-        console.error('Error connecting to server:', error)
-      }
-    }
-
-    checkServer()
-
-    // Connect to Socket.IO server
-    const socket = io('http://localhost:5000')
-
-    socket.on('connect', () => {
-      console.log('Connected to Socket')
-      setSocketConnected(true)
-    })
-
-    socket.on('disconnect', () => {
-      console.log('Disconnected from Socket')
-      setSocketConnected(false)
-    })
-
-    // Cleanup on unmount
-    return () => {
-      socket.disconnect()
-    }
-  }, [])
-
   return (
-    <div className="App">
-      <h1>Real-Time Pest Alert System</h1>
-      
-      <div className="status-container">
-        <div className="status-card">
-          <h2>Backend Status</h2>
-          <p className={serverStatus.includes('running') ? 'status-success' : 'status-error'}>
-            {serverStatus}
-          </p>
-        </div>
-
-        <div className="status-card">
-          <h2>Socket.IO Status</h2>
-          <p className={socketConnected ? 'status-success' : 'status-error'}>
-            {socketConnected ? '✅ Connected' : '❌ Disconnected'}
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <Navbar />
+      <AlertListener />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />      
+        <Route path="/register" element={<Register />} /> 
+        <Route path="/report" element={<ReportPest />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/my-reports" element={<MyReports />} />
+        <Route path="/manage-users" element={<ManageUsers />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

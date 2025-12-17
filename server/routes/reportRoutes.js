@@ -1,14 +1,16 @@
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const PestReport = require('../models/PestReport');
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import PestReport from '../models/PestReport.js'; // ✅ Added .js
+import { protect, admin } from '../middleware/authMiddleware.js'; // ✅ Added .js
 
 const router = express.Router();
 
-// Multer Configuration for Image Uploads
+// --- MULTER CONFIG ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    // Ensure this folder exists in your root directory!
+    cb(null, 'uploads/'); 
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -18,12 +20,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    
     if (extname && mimetype) {
       return cb(null, true);
     } else {
@@ -32,21 +33,21 @@ const upload = multer({
   }
 });
 
-// POST / - Farmer: Create New Pest Report
-router.post('/', upload.single('image'), async (req, res) => {
+// --- ROUTES ---
+
+// 1. Create Report (Farmer) - Protected
+router.post('/', protect, upload.single('image'), async (req, res) => {
   try {
-    const { farmerName, location, pestType, description } = req.body;
+    const { location, pestType, description } = req.body;
     
-    if (!req.file) {
-      return res.status(400).json({ error: 'Image file is required' });
-    }
-    
-    if (!farmerName || !location || !pestType || !description) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
+    // Auto-fill farmerName from the logged-in user token
+    const farmerName = req.user.name; 
+
+    if (!req.file) return res.status(400).json({ error: 'Image file is required' });
+    if (!location || !pestType || !description) return res.status(400).json({ error: 'All fields are required' });
 
     const newReport = new PestReport({
-      farmerName,
+      farmerName, 
       location,
       pestType,
       description,
@@ -55,100 +56,64 @@ router.post('/', upload.single('image'), async (req, res) => {
     });
 
     await newReport.save();
-    res.status(201).json({
-      message: 'Pest report submitted successfully',
-      report: newReport
-    });
+    res.status(201).json({ message: 'Report submitted', report: newReport });
   } catch (error) {
-    console.error('Error creating report:', error);
     res.status(500).json({ error: 'Failed to submit report', details: error.message });
   }
 });
 
-// GET / - Admin: Fetch All Reports (Sorted by Newest First)
-router.get('/', async (req, res) => {
+router.get('/myreports', protect, async (req, res) => {
+  try {
+    // We find reports where 'farmerName' matches the logged-in user's name
+    // (Ideally we should use user ID, but name works for now based on your schema)
+    const reports = await PestReport.find({ farmerName: req.user.name }).sort({ createdAt: -1 });
+    res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch your reports' });
+  }
+});
+
+// 2. Get All Reports - Protected + Admin Only
+router.get('/', protect, admin, async (req, res) => {
   try {
     const reports = await PestReport.find().sort({ createdAt: -1 });
     res.status(200).json(reports);
   } catch (error) {
-    console.error('Error fetching reports:', error);
-    res.status(500).json({ error: 'Failed to fetch reports', details: error.message });
+    res.status(500).json({ error: 'Failed to fetch reports' });
   }
 });
 
-// GET /:id - Admin: Fetch Single Report by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const report = await PestReport.findById(req.params.id);
-    
-    if (!report) {
-      return res.status(404).json({ error: 'Report not found' });
-    }
-    
-    res.status(200).json(report);
-  } catch (error) {
-    console.error('Error fetching report:', error);
-    res.status(500).json({ error: 'Failed to fetch report', details: error.message });
-  }
-});
-
-// PUT /:id - Admin: Update Report Status
-router.put('/:id', async (req, res) => {
+// 3. Update Status - Protected + Admin Only
+router.put('/:id', protect, admin, async (req, res) => {
   try {
     const { status } = req.body;
-    
-    if (!status || !['Pending', 'Resolved', 'Rejected'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status value' });
-    }
-
     const report = await PestReport.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true, runValidators: true }
+      { new: true }
     );
-
-    if (!report) {
-      return res.status(404).json({ error: 'Report not found' });
-    }
-
-    res.status(200).json({
-      message: 'Report status updated successfully',
-      report
-    });
+    res.status(200).json({ message: 'Status updated', report });
   } catch (error) {
-    console.error('Error updating report:', error);
-    res.status(500).json({ error: 'Failed to update report', details: error.message });
+    res.status(500).json({ error: 'Update failed' });
   }
 });
 
-// POST /broadcast - Admin: Broadcast Alert via Socket.IO
-router.post('/broadcast', async (req, res) => {
+// 4. Broadcast Alert - Protected + Admin Only
+router.post('/broadcast', protect, admin, async (req, res) => {
   try {
     const { reportId, alertMessage, severity } = req.body;
-
-    if (!reportId || !alertMessage || !severity) {
-      return res.status(400).json({ error: 'reportId, alertMessage, and severity are required' });
-    }
-
-    // Find the report and mark it as Resolved
+    
     const report = await PestReport.findByIdAndUpdate(
       reportId,
       { status: 'Resolved' },
       { new: true }
     );
 
-    if (!report) {
-      return res.status(404).json({ error: 'Report not found' });
-    }
+    if (!report) return res.status(404).json({ error: 'Report not found' });
 
-    // Retrieve Socket.IO instance
+    // Ensure you have set 'socketio' in your server.js for this to work
     const io = req.app.get('socketio');
-
-    if (!io) {
-      return res.status(500).json({ error: 'Socket.IO instance not found' });
-    }
-
-    // Prepare alert payload
+    
     const alertPayload = {
       reportId: report._id,
       farmerName: report.farmerName,
@@ -159,18 +124,18 @@ router.post('/broadcast', async (req, res) => {
       timestamp: new Date()
     };
 
-    // Emit alert to all connected clients
-    io.emit('new_alert', alertPayload);
+    // Check if io exists before emitting to prevent crashes
+    if (io) {
+        io.emit('new_alert', alertPayload);
+    } else {
+        console.warn("Socket.io not initialized, alert saved but not broadcasted.");
+    }
 
-    res.status(200).json({
-      message: 'Alert broadcasted successfully',
-      report,
-      alert: alertPayload
-    });
+    res.status(200).json({ message: 'Alert broadcasted', alert: alertPayload });
   } catch (error) {
-    console.error('Error broadcasting alert:', error);
-    res.status(500).json({ error: 'Failed to broadcast alert', details: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Broadcast failed' });
   }
 });
 
-module.exports = router;
+export default router; // ✅ Correct export syntax
