@@ -20,7 +20,7 @@ function Login() {
 
   useEffect(() => {
     if (isError) {
-      alert(message); // Simple alert for errors (can be improved later)
+      alert(message); 
     }
 
     if (isSuccess || user) {
@@ -44,47 +44,70 @@ function Login() {
   };
 
   if (isLoading) {
-    return <div className="text-center mt-20 text-2xl">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center text-black justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center text-primary-700">
-          Login to AgriShield
-        </h1>
-        <form onSubmit={onSubmit}>
-          <div className="mb-4">
+    <div className="min-h-screen flex items-center justify-center pt-16 px-4">
+      <div className="glass-card p-10 rounded-3xl w-full max-w-md backdrop-blur-xl animate-fade-in-up">
+        
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-4 text-4xl shadow-inner border border-white/20">
+            🌾
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-white/60 text-sm font-medium">
+            Sign in to access AgriShield
+          </p>
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2 ml-1">Email Address</label>
             <input
               type="email"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:bg-white/10 focus:ring-2 focus:ring-green-400/50 transition duration-200"
               id="email"
               name="email"
               value={email}
-              placeholder="Enter your email"
+              placeholder="name@example.com"
               onChange={onChange}
               required
             />
           </div>
-          <div className="mb-6">
+          <div>
+             <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-2 ml-1">Password</label>
             <input
               type="password"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:bg-white/10 focus:ring-2 focus:ring-green-400/50 transition duration-200"
               id="password"
               name="password"
               value={password}
-              placeholder="Enter password"
+              placeholder="••••••••"
               onChange={onChange}
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-primary-600 text-white py-2 rounded-md hover:bg-primary-700 transition duration-300"
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-green-500/30 hover:scale-[1.02] active:scale-[0.98] transition duration-200"
           >
-            Submit
+            Sign In
           </button>
         </form>
+        
+        <div className="mt-8 text-center text-sm text-white/50">
+          Don't have an account? 
+          <a href="/register" className="ml-2 text-green-300 hover:text-green-200 font-semibold underline decoration-transparent hover:decoration-green-300 transition-all">
+            Create one
+          </a>
+        </div>
       </div>
     </div>
   );

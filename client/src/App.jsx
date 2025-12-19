@@ -8,21 +8,27 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home.jsx';
 import MyReports from './pages/MyReports';
 import ManageUsers from './pages/ManageUsers';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <AlertListener />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />      
-        <Route path="/register" element={<Register />} /> 
-        <Route path="/report" element={<ReportPest />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/my-reports" element={<MyReports />} />
-        <Route path="/manage-users" element={<ManageUsers />} />
-      </Routes>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <AlertListener />
+        <div className="flex-grow">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />      
+            <Route path="/register" element={<Register />} /> 
+            <Route path="/report" element={<ReportPest />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/my-reports" element={<MyReports />} />
+            <Route path="/manage-users" element={<ManageUsers />} />
+          </Routes>
+        </div>
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }

@@ -101,7 +101,7 @@ router.put('/:id', protect, admin, async (req, res) => {
 // 4. Broadcast Alert - Protected + Admin Only
 router.post('/broadcast', protect, admin, async (req, res) => {
   try {
-    const { reportId, alertMessage, severity } = req.body;
+    const { reportId, alertMessage, severity, imageUrl } = req.body; // <--- Changed: Extract imageUrl from body
     
     const report = await PestReport.findByIdAndUpdate(
       reportId,
@@ -121,6 +121,7 @@ router.post('/broadcast', protect, admin, async (req, res) => {
       pestType: report.pestType,
       alertMessage,
       severity,
+      imageUrl: imageUrl || report.imageUrl, // <--- Changed: Use body image (formatted) or fallback to DB
       timestamp: new Date()
     };
 

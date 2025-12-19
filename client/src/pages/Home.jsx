@@ -1,44 +1,27 @@
-import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import AdminView from '../components/AdminView';   // You need to create this
-import FarmerView from '../components/FarmerView'; // You need to create this
+import AdminView from '../components/AdminView';
+import FarmerView from '../components/FarmerView';
+import LandingView from '../components/LandingView';
 
-function Dashboard() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  // 1. Get user from Redux state
+function Home() {
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    // 2. Security Check: If no user is logged in, kick them out
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
-
-  // Prevent rendering if user is null (avoids crashing before redirect happens)
-  if (!user) return null; 
+  if (!user) {
+    return (
+      <div className="pt-24 px-4 sm:px-6 lg:px-8">
+         <LandingView />
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard-container">
-      {/* Shared Navbar can go here */}
-     
-
-      <div className="container mx-auto px-4">
-        {/* 3. CONDITIONAL RENDERING */}
-        
-        {user.role === 'admin' ? (
-          /* IF ADMIN: Show the Admin Component */
-          <AdminView user={user} />
-        ) : (
-          /* IF FARMER: Show the Farmer Component */
-          <FarmerView user={user} />
-        )}
+    <div className="pt-24 px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="max-w-7xl mx-auto">
+        {user.role === 'admin' ? <AdminView user={user} /> : <FarmerView user={user} />}
       </div>
     </div>
   );
 }
 
-export default Dashboard;
+export default Home;

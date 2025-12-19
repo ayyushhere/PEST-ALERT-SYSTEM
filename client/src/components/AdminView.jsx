@@ -33,30 +33,49 @@ function AdminView() {
   }, [user.token]);
 
   return (
-    <div className="admin-dashboard">
-      <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
-        <p className="font-bold">Admin Console</p>
-        <p>Manage users and review outbreak reports.</p>
+    <div className="pt-24 pb-12">
+      <div className="glass-card rounded-3xl p-8 mb-10 border-l-8 border-blue-500 bg-white/5">
+        <div className="flex items-start gap-4">
+           <div className="p-3 bg-blue-500/20 rounded-xl text-2xl">👮</div>
+           <div>
+              <h1 className="text-2xl font-bold text-white mb-2">Admin Console</h1>
+              <p className="text-white/70 text-lg">
+                Overview of system activity, user management, and pest reports.
+              </p>
+           </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Stat Card 1 */}
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h3 className="text-gray-500 text-sm uppercase">Pending Reports</h3>
-          <p className="text-3xl font-bold text-gray-800">{stats.pendingReports}</p>
+        <div className="glass-card p-8 rounded-3xl flex flex-col items-center justify-center text-center hover:bg-white/10 transition duration-300">
+           <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center text-2xl mb-4 text-yellow-500">
+             ⚠️
+           </div>
+          <h3 className="text-white/60 text-sm uppercase font-bold tracking-wider mb-2">Pending Reports</h3>
+          <p className="text-5xl font-bold text-white">{stats.pendingReports}</p>
         </div>
 
         {/* Stat Card 2 */}
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h3 className="text-gray-500 text-sm uppercase">Total Farmers</h3>
-          <p className="text-3xl font-bold text-gray-800">{stats.farmers}</p>
+        <div className="glass-card p-8 rounded-3xl flex flex-col items-center justify-center text-center hover:bg-white/10 transition duration-300">
+          <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-2xl mb-4 text-green-500">
+             👥
+           </div>
+          <h3 className="text-white/60 text-sm uppercase font-bold tracking-wider mb-2">Total Farmers</h3>
+          <p className="text-5xl font-bold text-white">{stats.farmers}</p>
         </div>
         
         {/* Admin Action */}
-        <div className="bg-white p-6 rounded-lg shadow-md flex items-center justify-center">
-            <button onClick={() => navigate('/manage-users')} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-                Manage User
-            </button>
+        <div 
+          onClick={() => navigate('/manage-users')}
+          className="glass-card p-8 rounded-3xl flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-600/20 hover:border-blue-500/40 transition duration-300 group"
+        >
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg shadow-blue-600/30 group-hover:scale-110 transition duration-300">
+             ⚙️
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Manage Users</h3>
+          <p className="text-white/60 text-sm mb-4">View and manage registered farmers</p>
+          <span className="text-blue-400 font-bold group-hover:translate-x-1 transition">Access Panel →</span>
         </div>
       </div>
     </div>
